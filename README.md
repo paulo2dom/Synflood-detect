@@ -48,19 +48,30 @@ In network security, DFAs can be used to:
 
 ### TCP Connection State Machine
 
-Our implementation models TCP connections using the following states:
+Our implementation models TCP connections using the following simplified state flow:
 
+```mermaid
+flowchart LR
+    A[CLOSED] -->|SYN| B[SYN_RECEIVED]
+    B -->|ACK| C[ESTABLISHED]
+    B -->|RST| A
+    C -->|FIN| D[FIN_WAIT_1]
+    C -->|RST| A
+    D -->|ACK| E[TIME_WAIT]
+    E -->|timeout| A
+    
+    style A fill:#e1f5fe
+    style B fill:#fff3e0
+    style C fill:#e8f5e8
+    style D fill:#fce4ec
+    style E fill:#f3e5f5
 ```
-┌─────────────┐    SYN     ┌──────────────┐    ACK     ┌─────────────┐
-│   CLOSED    │ ────────> │ SYN_RECEIVED │ ────────> │ ESTABLISHED │
-└─────────────┘            └──────────────┘            └─────────────┘
-       │                          │                           │
-       │                          │ RST                       │ FIN
-       │                          ▼                           ▼
-       │                    ┌─────────────┐              ┌──────────┐
-       └──────────────────  │   CLOSED    │              │FIN_WAIT_1│
-                            └─────────────┘              └──────────┘
-```
+
+**Key States for SYN Flood Detection:**
+- **CLOSED**: No connection - starting point
+- **SYN_RECEIVED**: Server got SYN, waiting for ACK (⚠️ vulnerable state)
+- **ESTABLISHED**: Normal connection active
+- **FIN_WAIT_1 / TIME_WAIT**: Connection closing phases
 
 ### SYN Flood Detection Logic
 
@@ -70,6 +81,24 @@ The automaton detects SYN floods by:
 2. **Counting Incomplete Handshakes**: SYN packets without corresponding SYN-ACK/ACK
 3. **Time Window Analysis**: Measuring SYN packet frequency within sliding windows
 4. **Threshold-based Alerting**: Triggering alerts when SYN counts exceed thresholds
+
+```mermaid
+flowchart LR
+    A[📦 Capture Packet] --> B{SYN?}
+    B -->|Yes| C[📊 Count SYNs]
+    B -->|No| D[🔄 Update State]
+    C --> E{Count > Threshold?}
+    E -->|Yes| F[🚨 ALERT!]
+    E -->|No| D
+    F --> G[📝 Log Attack]
+    D --> A
+    G --> A
+    
+    style A fill:#4ecdc4
+    style C fill:#ffe66d
+    style F fill:#ff6b6b
+    style G fill:#ffb3ba
+```
 
 ## ✨ Features
 
