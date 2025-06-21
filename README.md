@@ -19,23 +19,45 @@ A Python-based network security tool that uses **Finite Deterministic Automata (
 
 ## 🎯 Overview
 
-This project implements a SYN flood detection system that monitors network traffic and identifies potential DDoS attacks using:
+This project implements a **research-based SYN flood detection system** that applies formal automaton theory to network security. The system monitors network traffic and identifies potential DDoS attacks using:
 
-1. **Real-time packet analysis** with Scapy
-2. **Finite Deterministic Automata** to model TCP connection states
-3. **Statistical analysis** to detect anomalous traffic patterns
-4. **Multi-threaded architecture** for efficient processing
+1. **Formal Mathematical Models**: Based on peer-reviewed research in automaton theory for network attack detection
+2. **Real-time Packet Analysis**: High-performance packet capture and processing with Scapy
+3. **Deterministic Finite Automata**: Mathematically rigorous state machine modeling of TCP connection states
+4. **Pattern Recognition**: Statistical analysis to detect anomalous traffic patterns and attack signatures
+5. **Multi-threaded Architecture**: Efficient concurrent processing for high-speed network monitoring
+
+### Academic Foundation
+
+This implementation is grounded in formal computer science theory, specifically:
+- **Finite State Machine Theory**: Mathematical modeling of system states and transitions
+- **Formal Language Recognition**: Pattern matching for attack signature detection  
+- **Network Protocol Analysis**: Deep understanding of TCP/IP stack vulnerabilities
+- **Real-time System Design**: Efficient algorithms for continuous network monitoring
 
 ## 🤖 Finite Deterministic Automata in Network Security
 
-### What is a Finite Deterministic Automaton?
+*This project is based on the research paper "The Study on Network Attacks based on Automaton Theory" by SHANG Qing-wei et al., Procedia Engineering 00 (2011) 653 – 658.*
 
-A **Finite Deterministic Automaton (DFA)** is a computational model consisting of:
-- A finite set of **states**
-- A finite **alphabet** (input symbols)
-- A **transition function** that maps state-symbol pairs to new states
-- An **initial state**
-- A set of **accepting states**
+### Formal Definition of Deterministic Finite Automaton
+
+A **Deterministic Finite Automaton (DFA)** is formally defined as a five-tuple:
+
+**M = (Q, Σ, F, q₀, Z)**
+
+Where:
+1. **Q** - A finite set of states (system states)
+2. **Σ** - A finite set of input symbols (condition set/transition triggers)  
+3. **F: Q × Σ → Q** - A transition function that takes a state and input symbol, returning another state
+4. **q₀ ∈ Q** - A single start state of the system
+5. **Z ⊆ Q** - A set of final or accepted states
+
+### Mathematical Foundation
+
+For a computer system with **m** states in set Q and **n** transition conditions in set Σ:
+- There are at most **m** state nodes in the corresponding DFA
+- Each state node can transfer to at most **n** neighbor nodes
+- The complete state transition procedure can be described with a state transition diagram
 
 ### Application to Network Attack Detection
 
@@ -73,14 +95,41 @@ flowchart LR
 - **ESTABLISHED**: Normal connection active
 - **FIN_WAIT_1 / TIME_WAIT**: Connection closing phases
 
-### SYN Flood Detection Logic
+### Formal SYN-Flooding Attack Model
+
+Based on the research framework, our SYN-Flooding detection is modeled as:
+
+**M = (Q, Σ, F, s, Z)**
+
+Where:
+- **q ∈ Q**: q = (Intruder-status, Server-status, System-status)
+  - Intruder-status ∈ {listen, faked, SYN.SENT, ACK.SENT, failed, established}
+  - Server-status ∈ {listen, SYN.RCVD, SYN-ACK.SENT, ACK.RCVD, blocked, established}
+  - System-status ∈ {false, true} (indicates if intrusion detected)
+
+- **Σ**: Transition function set consisting of:
+  - **E0**: fake() - Forge non-existent host
+  - **E1**: Communication(s-host, d-host, SYN-ISN, 0) - Send SYN packet
+  - **E2**: Communication(s-host, d-host, SYN-ISN, ACK-ISN) - Send SYN-ACK packet
+  - **E3**: Tcp_resource_used_out() - Check if TCP resources exhausted
+
+### SYN Flood Detection States
+
+Our implementation recognizes these critical states:
+- **S0** = (listen, listen, false) - Normal state
+- **S1** = (faked, listen, false) - Attacker spoofing identity
+- **S2** = (SYN.SENT, SYN.RCVD, false) - SYN received, waiting for completion
+- **S3** = (failed, SYN-ACK.SENT, false) - Server sent SYN-ACK, no response
+- **S4** = (listen, blocked, true) - **ATTACK DETECTED** - Server resources exhausted
+
+### Detection Algorithm
 
 The automaton detects SYN floods by:
 
-1. **Tracking Connection States**: Each TCP connection is modeled as a state machine
-2. **Counting Incomplete Handshakes**: SYN packets without corresponding SYN-ACK/ACK
-3. **Time Window Analysis**: Measuring SYN packet frequency within sliding windows
-4. **Threshold-based Alerting**: Triggering alerts when SYN counts exceed thresholds
+1. **State Transition Monitoring**: Track progression through TCP handshake states
+2. **Incomplete Handshake Detection**: Count connections stuck in SYN.RCVD state
+3. **Resource Exhaustion Detection**: Monitor server capacity for new connections
+4. **Threshold-based Alerting**: Trigger alerts when attack patterns identified
 
 ```mermaid
 flowchart LR
@@ -330,10 +379,21 @@ Users are responsible for complying with applicable laws and obtaining proper au
 
 ## 📚 References
 
+### Primary Research
+- **SHANG Qing-wei et al.** "The Study on Network Attacks based on Automaton Theory." *Procedia Engineering* 00 (2011): 653-658. Open access under CC BY-NC-ND license.
+
+### Technical Standards
 - [RFC 793: Transmission Control Protocol](https://datatracker.ietf.org/doc/html/rfc793)
+- [RFC 4987: SYN Flood Attack Prevention](https://tools.ietf.org/html/rfc4987)
+
+### Tools and Libraries
 - [Scapy Documentation](https://scapy.readthedocs.io/)
+- [Python Networking Libraries](https://docs.python.org/3/library/socket.html)
+
+### Theoretical Background
 - [Finite Automata Theory](https://en.wikipedia.org/wiki/Finite_automaton)
-- [SYN Flood Attack Prevention](https://tools.ietf.org/html/rfc4987)
+- [Formal Language Theory in Network Security](https://en.wikipedia.org/wiki/Formal_language)
+- [State Machine Design Patterns](https://en.wikipedia.org/wiki/State_pattern)
 
 ## 📄 License
 
